@@ -70,14 +70,15 @@ export default function Home(){
 
   async function submit(e){
     e.preventDefault();
+    const form = e.currentTarget;
     setSending(true); setMessage("");
-    const data=Object.fromEntries(new FormData(e.currentTarget).entries());
+    const data=Object.fromEntries(new FormData(form).entries());
     try{
       const r=await fetch("/api/order",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...data,date:selected})});
       const result=await r.json();
       if(!r.ok) throw new Error(result.error||"送出失敗");
       setMessage("訂單已送出！初甜趣收到後會再透過 LINE 或電話與你確認。");
-      e.currentTarget.reset();
+      form.reset();
       setProduct("");
     }catch(err){ setMessage(err.message); }
     finally{ setSending(false); }
