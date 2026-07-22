@@ -56,11 +56,12 @@ export default function Admin(){
       <label>剩少量日期<textarea rows="5" value={data.limitedDates.join("\n")} onChange={e=>updateList("limitedDates",e.target.value)}/></label>
     </section>
 
-    <section><h2>商品</h2>{data.products.map((p,i)=><div className="grid3" key={p.id}>
-      <input value={p.name} onChange={e=>{const a=[...data.products];a[i]={...p,name:e.target.value};setData({...data,products:a})}}/>
-      <input value={p.desc} onChange={e=>{const a=[...data.products];a[i]={...p,desc:e.target.value};setData({...data,products:a})}}/>
-      <input value={p.price} onChange={e=>{const a=[...data.products];a[i]={...p,price:e.target.value};setData({...data,products:a})}}/>
-    </div>)}</section>
+    <section><h2>商品</h2>{data.products.map((p,i)=><div className="product-row" key={p.id}>
+      <input value={p.name} onChange={e=>{const a=[...data.products];a[i]={...p,name:e.target.value};setData({...data,products:a})}} placeholder="商品名稱"/>
+      <input value={p.desc} onChange={e=>{const a=[...data.products];a[i]={...p,desc:e.target.value};setData({...data,products:a})}} placeholder="商品介紹"/>
+      <input value={p.price} onChange={e=>{const a=[...data.products];a[i]={...p,price:e.target.value};setData({...data,products:a})}} placeholder="價格說明"/>
+      <button type="button" className="danger" onClick={()=>setData({...data,products:data.products.filter((_,idx)=>idx!==i)})}>刪除</button>
+    </div>)}<button type="button" onClick={()=>setData({...data,products:[...data.products,{id:`product-${Date.now()}`,name:"新商品",desc:"商品介紹",price:"價格依尺寸與裝飾確認"}]})}>＋ 新增商品</button></section>
     <button className="primary" onClick={save}>儲存網站設定</button>
 
     <section><h2>訂單管理</h2>
@@ -73,7 +74,7 @@ export default function Admin(){
     </section>
     <p className="status">{msg}</p>
     <style jsx>{`
-      .admin{max-width:1000px;margin:auto;padding:42px 20px;font-family:Arial,sans-serif;color:#4b382d}section{background:#fffaf5;border:1px solid #eadbce;border-radius:18px;padding:20px;margin:22px 0}label{display:grid;gap:8px;margin:15px 0}input,textarea,select{padding:12px;border:1px solid #d9c5b4;border-radius:10px;background:white}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:8px 0}.privacy{font-size:13px;color:#806c5f}.status{font-weight:700}.toolbar{display:grid;grid-template-columns:auto 1fr;gap:10px}.toolbar button,.primary{padding:12px 18px;border:0;border-radius:10px;cursor:pointer}.orders{display:grid;gap:12px;margin-top:16px}.orders article{background:white;border:1px solid #eadbce;border-radius:14px;padding:15px}.orders article>div{display:flex;justify-content:space-between;gap:10px}.orders p{margin:7px 0}@media(max-width:700px){.grid3,.toolbar{grid-template-columns:1fr}.orders article>div{display:grid}}
+      .admin{max-width:1000px;margin:auto;padding:42px 20px;font-family:Arial,sans-serif;color:#4b382d}section{background:#fffaf5;border:1px solid #eadbce;border-radius:18px;padding:20px;margin:22px 0}label{display:grid;gap:8px;margin:15px 0}input,textarea,select{padding:12px;border:1px solid #d9c5b4;border-radius:10px;background:white}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:8px 0}.product-row{display:grid;grid-template-columns:1fr 1.3fr 1fr auto;gap:8px;margin:8px 0}.danger{background:#f6e2de;color:#8f3f34;border:0;border-radius:10px;padding:10px}.privacy{font-size:13px;color:#806c5f}.status{font-weight:700}.toolbar{display:grid;grid-template-columns:auto 1fr;gap:10px}.toolbar button,.primary{padding:12px 18px;border:0;border-radius:10px;cursor:pointer}.orders{display:grid;gap:12px;margin-top:16px}.orders article{background:white;border:1px solid #eadbce;border-radius:14px;padding:15px}.orders article>div{display:flex;justify-content:space-between;gap:10px}.orders p{margin:7px 0}@media(max-width:700px){.grid3,.toolbar,.product-row{grid-template-columns:1fr}.orders article>div{display:grid}}
     `}</style>
   </main>
 }

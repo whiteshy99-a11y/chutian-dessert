@@ -68,7 +68,11 @@ export default function Home(){
   useMemo(()=>settings.products.find(p=>p.id===product),[settings.products,product]);
 
   function chooseDate(key){ setSelected(key); setOpen(true); setMessage(""); setOrderId(""); }
-  function chooseProduct(id){ setProduct(id); document.querySelector("#calendar")?.scrollIntoView({behavior:"smooth"}); }
+  function chooseProduct(id){
+    const item = settings.products.find(p=>p.id===id);
+    setProduct(item?.name || "");
+    document.querySelector("#calendar")?.scrollIntoView({behavior:"smooth"});
+  }
 
   async function submit(e){
     e.preventDefault();
@@ -124,7 +128,17 @@ export default function Home(){
 
       <section id="about" className="about"><div className="logo-mark">✿<strong>初甜趣</strong><small>HANDMADE DESSERT</small></div><div><p className="eyebrow">ABOUT CHUTIAN</p><h2>從第一口的甜，<br/>開始一段有趣的回憶。</h2><p>初甜趣相信，甜點不只是味道，也是陪伴每個重要時刻的溫度。我們堅持小量手作、嚴選食材，讓每一顆蛋糕都保有細緻口感與真誠心意。</p><p>不追求大量，只想把每一份甜，做好、做美，也做進你的回憶裡。</p></div></section>
 
-      <section id="contact" className="contact"><p className="eyebrow">CONTACT US</p><h2>把重要的日子，<br/>交給甜甜的我們。</h2><p><a href="tel:0976172288">0976-172-288</a>　高雄市鳳山區經武路353之1號</p><p className="service-hours">客服回覆時間：{settings.serviceHours}</p><div className="contact-actions"><a className="primary" href="#calendar">先查看可訂日期 →</a>{settings.mapUrl&&<a className="secondary" href={settings.mapUrl} target="_blank" rel="noreferrer">Google 地圖導航</a>}{settings.reviewUrl&&<a className="secondary" href={settings.reviewUrl} target="_blank" rel="noreferrer">查看 Google 評論</a>}</div></section>
+      <section className="section faq" id="faq">
+        <p className="eyebrow">FREQUENTLY ASKED QUESTIONS</p><h2>訂購常見問題</h2>
+        <div className="faq-grid">
+          <details><summary>送出表單就代表訂單成立嗎？</summary><p>尚未。送出後仍須由初甜趣透過 LINE 或電話確認，才算正式成立。</p></details>
+          <details><summary>可以現場付款嗎？</summary><p>可以，付款方式可選擇取貨當天現場現金付款。</p></details>
+          <details><summary>銀行匯款後要怎麼回報？</summary><p>請透過 LINE 客服提供訂購人姓名與匯款帳號後五碼，方便店家核對。</p></details>
+          <details><summary>可以修改取貨日期或蛋糕內容嗎？</summary><p>請盡快透過 LINE 客服聯絡；是否能修改需依備料與排單狀況確認。</p></details>
+        </div>
+      </section>
+
+      <section id="contact" className="contact"><p className="eyebrow">CONTACT US</p><h2>把重要的日子，<br/>交給甜甜的我們。</h2><p><a href="tel:0976172288">0976-172-288</a>　高雄市鳳山區經武路353之1號</p><p className="service-hours">客服回覆時間：{settings.serviceHours}</p><div className="contact-actions"><a className="primary" href="#calendar">先查看可訂日期 →</a>{settings.lineUrl&&<a className="secondary" href={settings.lineUrl} target="_blank" rel="noreferrer">LINE 客服</a>}{settings.mapUrl&&<a className="secondary" href={settings.mapUrl} target="_blank" rel="noreferrer">Google 地圖導航</a>}{settings.reviewUrl&&<a className="secondary" href={settings.reviewUrl} target="_blank" rel="noreferrer">查看 Google 評論</a>}</div></section>
     </main>
 
     <footer>✿ 初甜趣 HANDMADE DESSERT · SINCE 2026<br/><small>© 2026 Chutian Bake. All Rights Reserved.</small></footer>
