@@ -13,7 +13,16 @@ const defaultProducts = [
 const defaultSettings = {
   closedDates:["2026-08-19"],
   limitedDates:[],
-  products:defaultProducts
+  products:defaultProducts,
+  bankName:"連線商業銀行",
+  bankCode:"824",
+  bankAccount:"111018312187",
+  bankNote:"匯款完成後，請加入 LINE 官方帳號並提供訂購人姓名與帳號後五碼。",
+  lineUrl:"",
+  serviceHours:"每日 10:00–20:00",
+  announcement:"",
+  mapUrl:"https://www.google.com/maps/search/?api=1&query=高雄市鳳山區經武路353之1號",
+  reviewUrl:""
 };
 
 function dateKey(y,m,d){
@@ -34,13 +43,7 @@ function Calendar({month, settings, selected, onSelect}) {
           const closed=settings.closedDates.includes(key);
           const limited=settings.limitedDates.includes(key);
           const active=selected===key;
-          return <button
-            key={key}
-            className={`${closed?"closed":limited?"limited":"open"} ${active?"active":""}`}
-            disabled={closed}
-            onClick={()=>onSelect(key)}
-            aria-label={`${key}${closed?"已滿單":limited?"剩少量":"可預訂"}`}
-          >{d}</button>
+          return <button key={key} className={`${closed?"closed":limited?"limited":"open"} ${active?"active":""}`} disabled={closed} onClick={()=>onSelect(key)} aria-label={`${key}${closed?"已滿單":limited?"剩少量":"可預訂"}`}>{d}</button>
         })}
       </div>
     </div>
@@ -52,35 +55,36 @@ export default function Home(){
   const [settings,setSettings]=useState(defaultSettings);
   const [selected,setSelected]=useState("");
   const [product,setProduct]=useState("");
+  const [payment,setPayment]=useState("cash");
   const [open,setOpen]=useState(false);
   const [sending,setSending]=useState(false);
   const [message,setMessage]=useState("");
+  const [orderId,setOrderId]=useState("");
 
   useEffect(()=>{
-    fetch("/api/settings").then(r=>r.json()).then(d=>setSettings(d)).catch(()=>{});
+    fetch("/api/settings").then(r=>r.json()).then(d=>setSettings({...defaultSettings,...d})).catch(()=>{});
   },[]);
 
-  const chosenProduct = useMemo(
-    ()=>settings.products.find(p=>p.id===product),
-    [settings.products,product]
-  );
+  useMemo(()=>settings.products.find(p=>p.id===product),[settings.products,product]);
 
-  function chooseDate(key){ setSelected(key); setOpen(true); setMessage(""); }
+  function chooseDate(key){ setSelected(key); setOpen(true); setMessage(""); setOrderId(""); }
   function chooseProduct(id){ setProduct(id); document.querySelector("#calendar")?.scrollIntoView({behavior:"smooth"}); }
 
   async function submit(e){
     e.preventDefault();
     const form = e.currentTarget;
-    setSending(true); setMessage("");
+    setSending(true); setMessage(""); setOrderId("");
     const data=Object.fromEntries(new FormData(form).entries());
     try{
-      const r=await fetch("/api/order",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...data,date:selected})});
+      const r=await fetch("/api/order",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...data,date:selected,paymentMethod:payment})});
       const result=await r.json();
       if(!r.ok) throw new Error(result.error||"送出失敗");
-      setMessage("訂單已送出！初甜趣收到後會再透過 LINE 或電話與你確認。");
+      setOrderId(result.orderId||"");
+      setMessage("訂單已成功送出！初甜趣收到後會再透過 LINE 或電話與你確認。");
       form.reset();
       setProduct("");
-    }catch(err){ setMessage(err.message); }
+      setPayment("cash");
+    }catch(err){ setMessage(err instanceof Error ? err.message : "訂單送出失敗，請稍後再試。"); }
     finally{ setSending(false); }
   }
 
@@ -91,6 +95,7 @@ export default function Home(){
     </header>
 
     <main id="top">
+      {settings.announcement && <div className="announcement">📢 {settings.announcement}</div>}
       <section className="hero">
         <div>
           <p className="eyebrow">CHUTIAN BAKE · KAOHSIUNG</p>
@@ -99,74 +104,51 @@ export default function Home(){
           <a className="primary" href="#calendar">立即訂購 →</a>
           <p className="note">每日限量製作 · 使用動物性鮮奶油 · 無反式脂肪</p>
         </div>
-        <div className="cake-art" aria-label="初甜趣手作蛋糕插畫">
-          <div className="cake"><i/><i/><i/></div>
-          <p>made with warmth</p>
-        </div>
+        <div className="cake-art" aria-label="初甜趣手作蛋糕插畫"><div className="cake"><i/><i/><i/></div><p>made with warmth</p></div>
       </section>
 
       <section id="calendar" className="section calendar-section">
-        <p className="eyebrow">AVAILABLE DATES</p>
-        <h2>選擇取貨日期</h2>
+        <p className="eyebrow">AVAILABLE DATES</p><h2>選擇取貨日期</h2>
         <div className="months">{Object.keys(monthNames).map(m=><button key={m} className={month===Number(m)?"on":""} onClick={()=>setMonth(Number(m))}>{monthNames[m]}</button>)}</div>
         <Calendar month={month} settings={settings} selected={selected} onSelect={chooseDate}/>
         <div className="legend"><span><i className="dot open"/>可預訂</span><span><i className="dot limited"/>剩少量</span><span><i className="dot closed"/>已滿單</span></div>
         <p className="hint">點選綠色或金色日期即可填寫訂購資料；灰色日期已滿單。</p>
       </section>
 
-      <section className="features">
-        {[
-          ["♨","手工製作","每一顆甜點，皆用心製作"],
-          ["♧","嚴選食材","安心美味，吃得到純粹"],
-          ["♢","客製化服務","讓甜點成為專屬祝福"],
-          ["♡","用心溫度","把幸福的味道傳遞給你"]
-        ].map(x=><article key={x[1]}><b>{x[0]}</b><h3>{x[1]}</h3><p>{x[2]}</p></article>)}
-      </section>
+      <section className="features">{[["♨","手工製作","每一顆甜點，皆用心製作"],["♧","嚴選食材","安心美味，吃得到純粹"],["♢","客製化服務","讓甜點成為專屬祝福"],["♡","用心溫度","把幸福的味道傳遞給你"]].map(x=><article key={x[1]}><b>{x[0]}</b><h3>{x[1]}</h3><p>{x[2]}</p></article>)}</section>
 
       <section id="products" className="section products">
         <p className="eyebrow">OUR DESSERTS</p><h2>人氣商品</h2><p>每日新鮮手作，依季節調整口味</p>
-        <div className="product-grid">
-          {settings.products.map((p,i)=><article key={p.id}>
-            <span>0{i+1}</span><div className="dessert-icon">✿</div>
-            <h3>{p.name}</h3><p>{p.desc}</p><small>{p.price}</small>
-            <button onClick={()=>chooseProduct(p.id)}>選擇此品項 →</button>
-          </article>)}
-        </div>
+        <div className="product-grid">{settings.products.map((p,i)=><article key={p.id}><span>0{i+1}</span><div className="dessert-icon">✿</div><h3>{p.name}</h3><p>{p.desc}</p><small>{p.price}</small><button onClick={()=>chooseProduct(p.id)}>選擇此品項 →</button></article>)}</div>
       </section>
 
-      <section id="about" className="about">
-        <div className="logo-mark">✿<strong>初甜趣</strong><small>HANDMADE DESSERT</small></div>
-        <div><p className="eyebrow">ABOUT CHUTIAN</p><h2>從第一口的甜，<br/>開始一段有趣的回憶。</h2>
-        <p>初甜趣相信，甜點不只是味道，也是陪伴每個重要時刻的溫度。我們堅持小量手作、嚴選食材，讓每一顆蛋糕都保有細緻口感與真誠心意。</p>
-        <p>不追求大量，只想把每一份甜，做好、做美，也做進你的回憶裡。</p></div>
-      </section>
+      <section id="about" className="about"><div className="logo-mark">✿<strong>初甜趣</strong><small>HANDMADE DESSERT</small></div><div><p className="eyebrow">ABOUT CHUTIAN</p><h2>從第一口的甜，<br/>開始一段有趣的回憶。</h2><p>初甜趣相信，甜點不只是味道，也是陪伴每個重要時刻的溫度。我們堅持小量手作、嚴選食材，讓每一顆蛋糕都保有細緻口感與真誠心意。</p><p>不追求大量，只想把每一份甜，做好、做美，也做進你的回憶裡。</p></div></section>
 
-      <section id="contact" className="contact">
-        <p className="eyebrow">CONTACT US</p><h2>把重要的日子，<br/>交給甜甜的我們。</h2>
-        <p><a href="tel:0976172288">0976-172-288</a>　高雄市鳳山區經武路353之1號</p>
-        <a className="primary" href="#calendar">先查看可訂日期 →</a>
-      </section>
+      <section id="contact" className="contact"><p className="eyebrow">CONTACT US</p><h2>把重要的日子，<br/>交給甜甜的我們。</h2><p><a href="tel:0976172288">0976-172-288</a>　高雄市鳳山區經武路353之1號</p><p className="service-hours">客服回覆時間：{settings.serviceHours}</p><div className="contact-actions"><a className="primary" href="#calendar">先查看可訂日期 →</a>{settings.mapUrl&&<a className="secondary" href={settings.mapUrl} target="_blank" rel="noreferrer">Google 地圖導航</a>}{settings.reviewUrl&&<a className="secondary" href={settings.reviewUrl} target="_blank" rel="noreferrer">查看 Google 評論</a>}</div></section>
     </main>
 
     <footer>✿ 初甜趣 HANDMADE DESSERT · SINCE 2026<br/><small>© 2026 Chutian Bake. All Rights Reserved.</small></footer>
 
+    {settings.lineUrl && <a className="line-float" href={settings.lineUrl} target="_blank" rel="noreferrer" aria-label="前往 LINE 客服">LINE 客服</a>}
+
     {open && <div className="modal" onMouseDown={e=>{if(e.target===e.currentTarget)setOpen(false)}}>
       <div className="dialog">
         <button className="x" onClick={()=>setOpen(false)}>×</button>
-        <p className="eyebrow">ORDER FORM</p><h2>填寫訂購資料</h2>
-        <p className="selected-date">取貨日期：{selected}</p>
+        <p className="eyebrow">ORDER FORM</p><h2>填寫訂購資料</h2><p className="selected-date">取貨日期：{selected}</p>
         <form onSubmit={submit}>
-          <label>訂購品項<select name="product" value={product} onChange={e=>setProduct(e.target.value)} required>
-            <option value="">請選擇</option>{settings.products.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}
-          </select></label>
-          <div className="two"><label>尺寸<select name="size" required><option value="">請選擇</option><option>4 吋</option><option>6 吋</option><option>8 吋</option><option>其他／客製</option></select></label>
-          <label>取貨時間<input name="pickupTime" type="time" required/></label></div>
+          <label>訂購品項<select name="product" value={product} onChange={e=>setProduct(e.target.value)} required><option value="">請選擇</option>{settings.products.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></label>
+          <div className="two"><label>尺寸<select name="size" required><option value="">請選擇</option><option>4 吋</option><option>6 吋</option><option>8 吋</option><option>其他／客製</option></select></label><label>取貨時間<input name="pickupTime" type="time" required/></label></div>
+          <div className="two"><label>用途<select name="occasion"><option>生日</option><option>彌月</option><option>節慶</option><option>公司活動</option><option>其他</option></select></label><label>享用人數<select name="people"><option>1–4 人</option><option>5–6 人</option><option>7–8 人</option><option>9–10 人</option><option>10 人以上</option></select></label></div>
           <div className="two"><label>姓名<input name="name" required/></label><label>電話<input name="phone" inputMode="tel" required/></label></div>
           <label>LINE 顯示名稱<input name="lineName" placeholder="方便店家核對聯絡"/></label>
-          <label>蛋糕文字／蠟燭／其他備註<textarea name="note" rows="4"/></label>
+
+          <fieldset className="payment-box"><legend>付款方式</legend><label className="pay-option"><input type="radio" name="paymentMethod" value="cash" checked={payment==="cash"} onChange={()=>setPayment("cash")}/>現場付款（現金）</label><label className="pay-option"><input type="radio" name="paymentMethod" value="bank" checked={payment==="bank"} onChange={()=>setPayment("bank")}/>銀行匯款</label></fieldset>
+          {payment==="bank" && <div className="bank-card"><h3>銀行匯款資訊</h3>{settings.bankName ? <><p><b>銀行：</b>{settings.bankName}</p><p><b>代碼：</b>{settings.bankCode||"—"}</p><p><b>帳號：</b>{settings.bankAccount||"—"}</p>{settings.bankAccount&&<button type="button" className="copy-bank" onClick={()=>navigator.clipboard?.writeText(settings.bankAccount)}>複製帳號</button>}</> : <p>店家尚未填寫匯款帳號，送出後會由店家提供。</p>}<small>{settings.bankNote}</small></div>}
+
+          <label>蛋糕文字／蠟燭／盤叉／其他備註<textarea name="note" rows="4"/></label>
           <label className="agree"><input type="checkbox" required/>我了解送出後仍須由店家確認，才算正式成立訂單。</label>
           <button className="primary submit" disabled={sending}>{sending?"傳送中…":"送出訂單"}</button>
-          {message && <p className="result">{message}</p>}
+          {message && <div className="result"><p>{message}</p>{orderId && <p><b>訂單編號：{orderId}</b></p>}{settings.lineUrl && <a href={settings.lineUrl} target="_blank" rel="noreferrer">前往 LINE 客服</a>}</div>}
         </form>
       </div>
     </div>}
