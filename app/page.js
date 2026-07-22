@@ -152,7 +152,7 @@ export default function Home(){
         <form onSubmit={submit}>
           <label>訂購品項<select name="product" value={product} onChange={e=>setProduct(e.target.value)} required><option value="">請選擇</option>{settings.products.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></label>
           <div className="two"><label>尺寸<select name="size" required><option value="">請選擇</option><option>4 吋</option><option>6 吋</option><option>8 吋</option><option>其他／客製</option></select></label><label>取貨時間<input name="pickupTime" type="time" required/></label></div>
-          <div className="two"><label>用途<select name="occasion"><option>生日</option><option>彌月</option><option>節慶</option><option>公司活動</option><option>其他</option></select></label><label>享用人數<select name="people"><option>1–4 人</option><option>5–6 人</option><option>7–8 人</option><option>9–10 人</option><option>10 人以上</option></select></label></div>
+          <div className="two"><label>用途<select name="occasion"><option>生日</option><option>彌月</option><option>節慶</option><option>公司活動</option><option>其他</option></select></label></label></div>
           <div className="two"><label>姓名<input name="name" required/></label><label>電話<input name="phone" inputMode="tel" required/></label></div>
           <label>LINE 顯示名稱<input name="lineName" placeholder="方便店家核對聯絡"/></label>
 
