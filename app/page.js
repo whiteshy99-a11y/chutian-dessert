@@ -84,7 +84,7 @@ export default function Home(){
       const result=await r.json();
       if(!r.ok) throw new Error(result.error||"送出失敗");
       setOrderId(result.orderId||"");
-      setMessage("訂單已成功送出！初甜趣收到後會再透過 LINE 或電話與你確認。");
+      setMessage("訂購資料已送達初甜趣！店家會再透過 LINE 或電話與你確認，確認後訂單才正式成立。");
       form.reset();
       setProduct("");
       setPayment("cash");
